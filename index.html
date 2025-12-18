@@ -655,6 +655,7 @@
             postData.append('message1', formData.get('message1'));
             postData.append('message2', formData.get('message2'));
             postData.append('message3', formData.get('message3'));
+            postData.append('message4', formData.get('message4'));
             postData.append('timestamp', new Date().toISOString());
             console.log('Submitting FormData to:', GAS_WEB_APP_URL);
             // Send the FormData directly (browser will set multipart/form-data)
