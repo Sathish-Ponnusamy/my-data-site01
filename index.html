@@ -80,41 +80,28 @@
         </p>
 
         <div class="grid md:grid-cols-2 gap-8">
-            <!-- 1.1 Sheet Structure Comparison -->
             <div class="bg-white p-6 rounded-xl shadow-md">
-                <h3 class="text-xl font-semibold mb-3 border-b pb-2">Sheet Structure: ReadData vs. WriteLog</h3>
-                <p class="text-sm text-gray-500 mb-4">Toggle between the two mandatory sheet tabs to see their required structure and purpose.</p>
-                <div class="flex justify-center space-x-4 mb-4">
-                    <button id="toggle-read" class="px-4 py-2 text-sm font-medium rounded-full bg-indigo-100 text-indigo-700 transition duration-150">
-                        ReadData (Display)
-                    </button>
-                    <button id="toggle-write" class="px-4 py-2 text-sm font-medium rounded-full bg-gray-200 text-gray-700 hover:bg-indigo-100 transition duration-150">
-                        WriteLog (Form Input)
-                    </button>
-                </div>
-
-                <div id="sheet-table-container">
-                    <!-- Content updated by JS -->
+                <h3 class="text-xl font-semibold mb-3 border-b pb-2 text-indigo-700">Live Data from Sheet</h3>
+                <button onclick="fetchSheetData()" class="mb-4 bg-indigo-600 text-white px-4 py-2 rounded shadow hover:bg-indigo-700">Refresh Data</button>
+                <div id="live-data-container" class="overflow-x-auto text-sm">
+                    <p class="text-gray-400">Click refresh to load data...</p>
                 </div>
             </div>
 
-            <!-- 1.2/1.3 Read vs. Write Mechanism -->
-            <div class="bg-white p-6 rounded-xl shadow-md flex flex-col">
-                <h3 class="text-xl font-semibold mb-3 border-b pb-2">API Mechanism: GET vs. POST Security</h3>
-                <p class="text-sm text-gray-500 mb-4">Select the operation to visualize its relative complexity. Only the secure Apps Script (POST) allows writing data.</p>
-                <select id="api-selector" class="mb-4 p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    <option value="read">Read Data (GET: Public, Visualization API)</option>
-                    <option value="write">Write Data (POST: Secure, Apps Script API)</option>
-                </select>
-
-                <div class="flex-grow flex items-center justify-center">
-                    <div class="chart-container">
-                        <canvas id="apiChart"></canvas>
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <h3 class="text-xl font-semibold mb-3 border-b pb-2 text-indigo-700">Submit New Entry</h3>
+                <form id="dataForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Name</label>
+                        <input type="text" id="userName" name="name" class="w-full p-2 border rounded" required>
                     </div>
-                </div>
-                <div id="api-description" class="mt-4 p-3 rounded-lg bg-indigo-50 text-indigo-800 text-sm">
-                    <!-- Description updated by JS -->
-                </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Message</label>
+                        <textarea id="userMessage" name="message" class="w-full p-2 border rounded" required></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-green-600 text-white py-2 rounded font-bold hover:bg-green-700">Submit to Google Sheet</button>
+                </form>
+                <div id="responseMessage" class="mt-4 text-center hidden"></div>
             </div>
         </div>
     </section>
@@ -222,12 +209,12 @@
 </main>
 
 <script>
-<!--    const SPREADSHEET_ID = '18eVT_iVcjfdbAjXWiNa_CNDDKhF8z6h6Tzthc0rNrK8';-->
-    const SPREADSHEET_ID = '1nFGRs-H6EJbkGtQ2fmzHPyXlWVk4VDwGZf6QrXPsCzg';
+    const SPREADSHEET_ID = '18eVT_iVcjfdbAjXWiNa_CNDDKhF8z6h6Tzthc0rNrK8';
+<!--    const SPREADSHEET_ID = '1nFGRs-H6EJbkGtQ2fmzHPyXlWVk4VDwGZf6QrXPsCzg';-->
     const READDATA_GID = '0';
     const WRITE_GID = '1';
-    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby1xFyb-vu1HuaA62Fh-C0QoRSPNe3cCuwLWwNHrDfl1Z1QI1g8-LAqQ4FA0ZXtVmEl/exec';
-<!--    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyIJ0EAdROyJXr2dKnXnmmADBKu4hDbUdj-yMdzocTggPmtw0o0LwioZFsbOAk8P7k8/exec';-->
+<!--    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby1xFyb-vu1HuaA62Fh-C0QoRSPNe3cCuwLWwNHrDfl1Z1QI1g8-LAqQ4FA0ZXtVmEl/exec';-->
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyIJ0EAdROyJXr2dKnXnmmADBKu4hDbUdj-yMdzocTggPmtw0o0LwioZFsbOAk8P7k8/exec';
     const navLinks = document.querySelectorAll('.nav-link');
     const sections = document.querySelectorAll('.section-content');
     const apiSelector = document.getElementById('api-selector');
@@ -473,6 +460,66 @@
         createAPIChart();
         updateVariableContext('SPREADSHEET_ID'); // Default variable context
     });
+
+    // --- ACTUAL DATA INTERACTION LOGIC ---
+
+// 1. FETCH DATA (READ)
+async function fetchSheetData() {
+    const container = document.getElementById('live-data-container');
+    container.innerHTML = "Loading...";
+
+    // Using the Visualization API to read public data
+    const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&gid=${READDATA_GID}`;
+
+    try {
+        const response = await fetch(url);
+        const text = await response.text();
+        // Remove the extra JSON framing from Google
+        const json = JSON.parse(text.substr(47).slice(0, -2));
+
+        let html = '<table class="min-w-full border"><thead><tr class="bg-gray-100">';
+        json.table.cols.forEach(col => html += `<th class="p-2 border">${col.label}</th>`);
+        html += '</tr></thead><tbody>';
+
+        json.table.rows.forEach(row => {
+            html += '<tr>';
+            row.c.forEach(cell => html += `<td class="p-2 border">${cell ? cell.v : ''}</td>`);
+            html += '</tr>';
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    } catch (err) {
+        container.innerHTML = "<span class='text-red-500'>Error: Make sure Sheet is 'Anyone with link can view'</span>";
+    }
+}
+
+// 2. SUBMIT DATA (WRITE)
+document.getElementById('dataForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const respDiv = document.getElementById('responseMessage');
+    respDiv.classList.remove('hidden');
+    respDiv.innerHTML = "Submitting...";
+
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData.entries());
+
+    // Send data to the Apps Script URL
+    fetch(GAS_WEB_APP_URL, {
+        method: 'POST',
+        mode: 'no-cors', // Required for Google Apps Script cross-domain
+        cache: 'no-cache',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(() => {
+        respDiv.innerHTML = "<span class='text-green-600 font-bold'>Success! Data sent.</span>";
+        this.reset();
+        fetchSheetData(); // Refresh table
+    })
+    .catch(err => {
+        respDiv.innerHTML = "<span class='text-red-600'>Error: " + err + "</span>";
+    });
+});
 
 </script>
 </body>
