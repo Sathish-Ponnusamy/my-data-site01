@@ -463,64 +463,130 @@
 
     // --- ACTUAL DATA INTERACTION LOGIC ---
 
-// 1. FETCH DATA (READ)
+<!--// 1. FETCH DATA (READ)-->
+<!--async function fetchSheetData() {-->
+<!--    const container = document.getElementById('live-data-container');-->
+<!--    container.innerHTML = "Loading...";-->
+
+<!--    // Using the Visualization API to read public data-->
+<!--    const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&gid=${READDATA_GID}`;-->
+
+<!--    try {-->
+<!--        const response = await fetch(url);-->
+<!--        const text = await response.text();-->
+<!--        // Remove the extra JSON framing from Google-->
+<!--        const json = JSON.parse(text.substr(47).slice(0, -2));-->
+
+<!--        let html = '<table class="min-w-full border"><thead><tr class="bg-gray-100">';-->
+<!--        json.table.cols.forEach(col => html += `<th class="p-2 border">${col.label}</th>`);-->
+<!--        html += '</tr></thead><tbody>';-->
+
+<!--        json.table.rows.forEach(row => {-->
+<!--            html += '<tr>';-->
+<!--            row.c.forEach(cell => html += `<td class="p-2 border">${cell ? cell.v : ''}</td>`);-->
+<!--            html += '</tr>';-->
+<!--        });-->
+<!--        html += '</tbody></table>';-->
+<!--        container.innerHTML = html;-->
+<!--    } catch (err) {-->
+<!--        container.innerHTML = "<span class='text-red-500'>Error: Make sure Sheet is 'Anyone with link can view'</span>";-->
+<!--    }-->
+<!--}-->
+
+<!--// 2. SUBMIT DATA (WRITE)-->
+<!--document.getElementById('dataForm').addEventListener('submit', function(e) {-->
+<!--    e.preventDefault();-->
+<!--    const respDiv = document.getElementById('responseMessage');-->
+<!--    respDiv.classList.remove('hidden');-->
+<!--    respDiv.innerHTML = "Submitting...";-->
+
+<!--    const formData = new FormData(this);-->
+<!--    const data = Object.fromEntries(formData.entries());-->
+
+<!--    // Send data to the Apps Script URL-->
+<!--    fetch(GAS_WEB_APP_URL, {-->
+<!--        method: 'POST',-->
+<!--        mode: 'no-cors', // Required for Google Apps Script cross-domain-->
+<!--        cache: 'no-cache',-->
+<!--        headers: { 'Content-Type': 'application/json' },-->
+<!--        body: JSON.stringify(data)-->
+<!--    })-->
+<!--    .then(() => {-->
+<!--        respDiv.innerHTML = "<span class='text-green-600 font-bold'>Success! Data sent.</span>";-->
+<!--        this.reset();-->
+<!--        fetchSheetData(); // Refresh table-->
+<!--    })-->
+<!--    .catch(err => {-->
+<!--        respDiv.innerHTML = "<span class='text-red-600'>Error: " + err + "</span>";-->
+<!--    });-->
+<!--});-->
+// 1. THE READ FUNCTION (Uses Google Visualization API)
 async function fetchSheetData() {
     const container = document.getElementById('live-data-container');
-    container.innerHTML = "Loading...";
+    container.innerHTML = "Fetching...";
 
-    // Using the Visualization API to read public data
+    // This URL accesses your public sheet data
     const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&gid=${READDATA_GID}`;
 
     try {
         const response = await fetch(url);
         const text = await response.text();
-        // Remove the extra JSON framing from Google
-        const json = JSON.parse(text.substr(47).slice(0, -2));
+        const json = JSON.parse(text.substr(47).slice(0, -2)); // Clean Google's JSON wrapper
 
-        let html = '<table class="min-w-full border"><thead><tr class="bg-gray-100">';
-        json.table.cols.forEach(col => html += `<th class="p-2 border">${col.label}</th>`);
-        html += '</tr></thead><tbody>';
+        let tableHtml = '<table class="w-full border-collapse"><thead><tr class="bg-gray-100">';
+        json.table.cols.forEach(col => tableHtml += `<th class="border p-2 text-left">${col.label || 'Column'}</th>`);
+        tableHtml += '</tr></thead><tbody>';
 
         json.table.rows.forEach(row => {
-            html += '<tr>';
-            row.c.forEach(cell => html += `<td class="p-2 border">${cell ? cell.v : ''}</td>`);
-            html += '</tr>';
+            tableHtml += '<tr>';
+            row.c.forEach(cell => tableHtml += `<td class="border p-2">${cell ? cell.v : ''}</td>`);
+            tableHtml += '</tr>';
         });
-        html += '</tbody></table>';
-        container.innerHTML = html;
-    } catch (err) {
-        container.innerHTML = "<span class='text-red-500'>Error: Make sure Sheet is 'Anyone with link can view'</span>";
+        tableHtml += '</tbody></table>';
+        container.innerHTML = tableHtml;
+    } catch (e) {
+        container.innerHTML = `<p class="text-red-500">Error: Make sure your Sheet is "Anyone with link can view".</p>`;
     }
 }
 
-// 2. SUBMIT DATA (WRITE)
+// 2. THE WRITE FUNCTION (Talks to your doPost function)
 document.getElementById('dataForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    const respDiv = document.getElementById('responseMessage');
-    respDiv.classList.remove('hidden');
-    respDiv.innerHTML = "Submitting...";
+    const btn = document.getElementById('submitBtn');
+    const status = document.getElementById('formStatus');
 
-    const formData = new FormData(this);
-    const data = Object.fromEntries(formData.entries());
+    btn.disabled = true;
+    btn.innerText = "Sending...";
+    status.classList.remove('hidden');
+    status.innerHTML = "Processing...";
 
-    // Send data to the Apps Script URL
+    const payload = {
+        name: document.getElementById('formName').value,
+        message: document.getElementById('formMessage').value
+    };
+
     fetch(GAS_WEB_APP_URL, {
         method: 'POST',
-        mode: 'no-cors', // Required for Google Apps Script cross-domain
+        mode: 'no-cors', // Crucial for Google Apps Script
         cache: 'no-cache',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify(payload)
     })
     .then(() => {
-        respDiv.innerHTML = "<span class='text-green-600 font-bold'>Success! Data sent.</span>";
-        this.reset();
-        fetchSheetData(); // Refresh table
+        status.innerHTML = "✅ Success! Row added to Sheet.";
+        status.className = "mt-4 text-center text-sm text-green-600 font-bold";
+        document.getElementById('dataForm').reset();
+        fetchSheetData(); // Auto-refresh the list
     })
     .catch(err => {
-        respDiv.innerHTML = "<span class='text-red-600'>Error: " + err + "</span>";
+        status.innerHTML = "❌ Error: " + err;
+        status.className = "mt-4 text-center text-sm text-red-600";
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerText = "🚀 Send to Google Sheet";
     });
 });
-
 </script>
 </body>
 </html>
