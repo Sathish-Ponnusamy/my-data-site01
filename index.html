@@ -226,7 +226,7 @@
     const SPREADSHEET_ID = '18eVT_iVcjfdbAjXWiNa_CNDDKhF8z6h6Tzthc0rNrK8';
     // Google Apps Script Web App URL for form submissions (Replace with your deployed script URL)
     // const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/PASTE_YOUR_SCRIPT_ID_HERE/exec';
-    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzhHLrtY7ig4xnf_BPUpDnlFGRI4U9_qoTAlEOojtYaSpS9Uz8BqclSQSJI3Kp1XhwX/exec';
+    const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwipm5vejfHxHYM6iC6_SOwMzCM84Wdx5qdZRuWZrsVPm5UiCA31W5WlUqQxgitPnYQ/exec';
 
     const navLinks = document.querySelectorAll('.nav-link');
     const sections = document.querySelectorAll('.section-content');
@@ -424,16 +424,42 @@
                                     <td colspan="2" class="px-6 py-4">
                                         <form id="writeLogForm" class="space-y-4" onsubmit="return handleWriteLogSubmit(event)">
                                             <div>
-                                                <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+                                                <label for="name" class="block text-sm font-medium text-gray-700">Locum Agency</label>
                                                 <input type="text" name="name" id="name" required
                                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                                    placeholder="Your name">
+                                                    placeholder="Locum Agency">
                                             </div>
                                             <div>
-                                                <label for="message" class="block text-sm font-medium text-gray-700">Message</label>
+                                                <label for="message" class="block text-sm font-medium text-gray-700">Locum Work Location</label>
                                                 <textarea name="message" id="message" required rows="3"
                                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                                                    placeholder="Your message"></textarea>
+                                                    placeholder="Locum Work Location"></textarea>
+                                            </div>
+
+                                            <div>
+                                                <label for="message1" class="block text-sm font-medium text-gray-700">No of Hrs work</label>
+                                                <textarea name="message1" id="message1" required rows="3"
+                                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                    placeholder="Your No of Hrs work"></textarea>
+                                            </div>
+                                            <div>
+                                                <label for="message2" class="block text-sm font-medium text-gray-700">Rate per Hr</label>
+                                                <textarea name="message2" id="message2" required rows="3"
+                                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                    placeholder="£ 70"></textarea>
+                                            </div>
+                                            <div>
+                                                <label for="message3" class="block text-sm font-medium text-gray-700">Salary per day</label>
+                                                <textarea name="message3" id="message3" required rows="3"
+                                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                    placeholder="£ 700"></textarea>
+                                            </div>
+
+                                            <div>
+                                                <label for="message4" class="block text-sm font-medium text-gray-700">Tax Status</label>
+                                                <textarea name="message4" id="message4" required rows="3"
+                                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                    placeholder="Without Tax"></textarea>
                                             </div>
                                             <div class="flex items-center justify-between">
                                                 <button type="submit" id="submitBtn"
@@ -626,6 +652,9 @@
             const postData = new FormData();
             postData.append('name', formData.get('name'));
             postData.append('message', formData.get('message'));
+            postData.append('message1', formData.get('message1'));
+            postData.append('message2', formData.get('message2'));
+            postData.append('message3', formData.get('message3'));
             postData.append('timestamp', new Date().toISOString());
             console.log('Submitting FormData to:', GAS_WEB_APP_URL);
             // Send the FormData directly (browser will set multipart/form-data)
