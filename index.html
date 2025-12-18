@@ -227,6 +227,7 @@
     // Google Apps Script Web App URL for form submissions (Replace with your deployed script URL)
     // const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/PASTE_YOUR_SCRIPT_ID_HERE/exec';
     const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzhHLrtY7ig4xnf_BPUpDnlFGRI4U9_qoTAlEOojtYaSpS9Uz8BqclSQSJI3Kp1XhwX/exec';
+
     const navLinks = document.querySelectorAll('.nav-link');
     const sections = document.querySelectorAll('.section-content');
     const apiSelector = document.getElementById('api-selector');
@@ -250,7 +251,7 @@
         write: {
             title: "New Entry (Form Input)",
             purpose: "Private data log for form submissions via Google Apps Script (POST).",
-            columns: [{ name: "Timestamp", usage: "Record Time" }, { name: "Name", usage: "User Input" }, { name: "Message", usage: "User Input" }]
+            columns: [{ name: "Timestamp", usage: "Record Time" }, { name: "Locum Agency", usage: "User Input" }, { name: "Locum Work Location", usage: "User Input" }]
         }
     };
 
@@ -263,7 +264,7 @@
      * Uses the public `gviz/tq` endpoint so the sheet (or its tab) must be shared publicly.
      */
     async function fetchReadData() {
-        const sheetName = 'WriteLog';
+        const sheetName = 'Locum';
         // Use tqx=out:json to get cleaner JSON response
         const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&headers=1&tq=${encodeURIComponent('SELECT *')}`;
         console.log('Fetching sheet data from:', url);
