@@ -263,7 +263,7 @@
      * Uses the public `gviz/tq` endpoint so the sheet (or its tab) must be shared publicly.
      */
     async function fetchReadData() {
-        const sheetName = 'ReadData';
+        const sheetName = 'WriteLog';
         // Use tqx=out:json to get cleaner JSON response
         const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&headers=1&tq=${encodeURIComponent('SELECT *')}`;
         console.log('Fetching sheet data from:', url);
